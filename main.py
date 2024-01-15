@@ -13,6 +13,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 matplotlib.use('TkAgg')
 
+DEBUG_GRAPHICS = False
+CMD_SIMULATION = "ros2 launch projects victims.launch.py"
+CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
 
 # sg.Print('Re-routing the stdout', do_not_reroute_stdout=False)
 debug = sg.Print
@@ -71,45 +74,58 @@ def main():
             
             if event in (None, 'Exit'):         # checks if user wants to exit
                 if(env_running):
-                    os.killpg(os.getpgid(p.pid), signal.SIGTERM) 
+                    os.killpg(os.getpgid(p0.pid), signal.SIGTERM) 
+                    os.killpg(os.getpgid(p1.pid), signal.SIGTERM)                     
                     kill_gazebo()
                 print('Exiting')
                 break
             
-            if event == 'sim' and not env_running: # the two lines of code needed to get button and run command
-                cmd = "ros2 launch projects victims.launch.py"
-                # cmd = "cat tmp"
-                # runCommand(cmd=values['_IN_'], window=window)
-                p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
-                # p = subprocess.run(cmd, shell=True).#, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                env_running = True
-                window['sim'].update('    Kill simulation           ')
-                # window['sim'].update(disabled=True)
-                window['sim'].update(button_color=('white', 'red'))
-                print('Simulation launched')
-                continue
+            if event == 'sim':
+                if not env_running:
+                    if not DEBUG_GRAPHICS:
+                        p0 = subprocess.Popen(CMD_SIMULATION, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+                    window['sim'].update('    Kill simulation           ')
+                    window['sim'].update(button_color=('white', 'red'))
+                    env_running = True
+                    print('Simulation launched')
+                    continue
+                else:
+                    window['sim'].update('Launch Gazebo Simulation')
+                    window['sim'].update(button_color=('white', 'green'))
+                    kill_gazebo()
+                    if not DEBUG_GRAPHICS:
+                        os.killpg(os.getpgid(p0.pid), signal.SIGTERM) 
+                    env_running = False
+                    print('Simulation killed')
+                    continue
 
-            if event == 'sim' and env_running:
-                print('Killing simulation')
-                env_running = False
-                window['sim'].update('Launch Gazebo Simulation')
-                window['sim'].update(button_color=('white', 'green'))
-                kill_gazebo()
-
-                os.killpg(os.getpgid(p.pid), signal.SIGTERM) 
-                print('Simulation killed')
-                continue
             
-            if event == 'planner' and not already_showed:
-                print('Launching planner')
-                fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-                t = np.arange(0, 3, .01)
-                fig.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-                fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
-                already_showed = True
+            if event == 'planner':
+                if not already_showed:
+                    print('Launching planner')
+                    window['planner'].update('Kill planner')
+                    window['planner'].update(button_color=('white', 'red'))
+                    if not DEBUG_GRAPHICS:
+                        p1 = subprocess.Popen(CMD_PLANNER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
+                    
+                    print('Planner launched')
+                    # fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
+                    # t = np.arange(0, 3, .01)
+                    # fig.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
+                    # fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+                    already_showed = True
 
                     # window.Refresh() if window else None        # yes, a 1-line if, so shoot me
-
+                else:
+                    window['planner'].update('Launch Planner')
+                    window['planner'].update(button_color=('white', 'green'))
+                    if not DEBUG_GRAPHICS:
+                        os.killpg(os.getpgid(p1.pid), signal.SIGTERM) 
+                    already_showed = False
+                    print('Planner killed')
+                    already_showed = False
+                    continue
+                    
         window.Close()
     except Exception as e:
         sg.popup_error_with_traceback(f'An error happened.  Here is the info:', e)
