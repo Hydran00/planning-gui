@@ -4,10 +4,18 @@ import matplotlib
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
 from shapely import wkt
+import time
+
+def update_figure(current_ax, current_fig):
+    time.sleep(0.5)
+    color = np.random.rand(3,)
+    path = np.loadtxt(str(get_package_share_directory('planner')) + '/data/dubins_path.txt', delimiter=',')
+    current_ax.plot(path[2:,0], path[2:,1], color=color, linewidth=2.0)
+    current_fig.canvas.draw()
+    return current_ax, current_fig
 
 def plot_map_and_path():
-    # clear current figure
-    # plt.clf()
+    time.sleep(0.5)
     path = np.loadtxt(str(get_package_share_directory('planner')) + '/data/dubins_path.txt', delimiter=',')
     start = path[0]
     end = path[1]
@@ -20,13 +28,12 @@ def plot_map_and_path():
         # plot holes for each polygon
         xh, yh = hole.xy
         ax.plot(xh, yh, '-ok', lw=4)
-        # plot the voronoi edges
+
     ax.scatter(start[0], start[1], marker='o', color='green')
     ax.scatter(end[0], end[1], marker='o', color='red')
     ax.plot(path[2:,0], path[2:,1], 'b-', linewidth=2.0)
     ax.axis("equal")
-    return fig
-    # plt.show()
+    return ax, fig
 
 
 if __name__ == "__main__":
