@@ -49,27 +49,27 @@ def kill_gazebo():
             print('Killing gzclient')
             proc.kill()
 
-def kill_process(p):
-        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-        kill_gazebo()
-
-def signal_handler(sig, frame):
-    if 'p0' in locals():
-        kill_process(p0)
-        kill_gazebo()
-    if 'p1' in locals():
-        kill_process(p1)
-    kill_gazebo()
-    sys.exit(0)
 
 def main():
-    # CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
+    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
+    def kill_process(p):
+            os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+            kill_gazebo()
+
+    def signal_handler(sig, frame):
+        if 'p0' in locals():
+            kill_process(p0)
+            kill_gazebo()
+        if 'p1' in locals():
+            kill_process(p1)
+        kill_gazebo()
+        sys.exit(0)
     
     # intercept ctrl+c
     signal.signal(signal.SIGINT, signal_handler) 
        
-    layout = [[sg.Text('Select the planner and click "Launch Planner". \nRemember to have' +
-                       ' your terminal ros workspace sourced!', key='title')],
+    layout = [[sg.Text('Select the planner and click "Launch Planner". \n' +
+                       'Your ros workspace must be sourced in this terminal!', key='title')],
               [sg.Canvas(key='-CANVAS-', size=(500, 400)),
                sg.Output(size=(15, 10))],          # an output area where all print output will go
               [sg.Button('Launch Gazebo Simulation', key='sim', button_color=(
@@ -130,7 +130,7 @@ def main():
                 elif values['dropdown'] == 'RRT*':
                     CMD_PLANNER = "ros2 launch planner rrt_star.launch.py"
                 elif values['dropdown'] == 'RRT* Dubins':
-                    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
+                    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py > tmp"
                 else:
                     CMD_PLANNER = "ros2 launch planner voronoi.launch.py"
                 continue
