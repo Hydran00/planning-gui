@@ -111,7 +111,7 @@ def main():
                     kill_process(p0)
                     kill_gazebo()
                 if 'p1' in locals():
-                    kill_planner(p1)
+                    kill_process(p1)
                 print('Exiting')
                 break
             # Planners selection:
