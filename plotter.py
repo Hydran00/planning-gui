@@ -6,6 +6,8 @@ from ament_index_python.packages import get_package_share_directory
 from shapely import wkt
 
 def plot_map_and_path():
+    # clear current figure
+    # plt.clf()
     path = np.loadtxt(str(get_package_share_directory('planner')) + '/data/dubins_path.txt', delimiter=',')
     start = path[0]
     end = path[1]

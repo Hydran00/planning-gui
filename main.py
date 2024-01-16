@@ -7,6 +7,8 @@ import signal
 import PySimpleGUI as sg
 import psutil
 from plotter import plot_map_and_path
+from ament_index_python.packages import get_package_share_directory as share_dir
+
 
 import matplotlib
 from matplotlib.ticker import NullFormatter  # useful for `logit` scale
@@ -15,7 +17,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 matplotlib.use('TkAgg')
 
 
-DEBUG_GRAPHICS = False
+DEBUG_GRAPHICS = False  # wether to activate buttons effect or not
 CMD_SIMULATION = "ros2 launch projects victims.launch.py"
 CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
 
@@ -24,15 +26,18 @@ debug = sg.Print
 
 
 def draw_figure(canvas):
-    figure = plot_map_and_path()
     # plot map
-    
+    canvas.delete("all")
+    figure = plot_map_and_path()
     figure_canvas_agg = FigureCanvasTkAgg(figure, canvas)
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
     return figure_canvas_agg
 
-
+def delete_fig_agg(fig_agg):
+    fig_agg.get_tk_widget().forget()
+    plt.close('all')
+    
 def kill_gazebo():
     for proc in psutil.process_iter():
         # check whether the process name matches
@@ -45,50 +50,55 @@ def kill_gazebo():
 
 
 def main():
+    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
+
     # os.system(". ~/shelfino_ws/install/setup.zsh")
     # sg.Print('Re-routing the stdout', do_not_reroute_stdout=False)
     layout = [[sg.Text('Select the planner and click "Launch Planner" ', key='title')],
               [sg.Canvas(key='-CANVAS-', size=(500, 400)),
                sg.Output(size=(15, 10))],          # an output area where all print output will go
               [sg.Button('Launch Gazebo Simulation', key='sim', button_color=(
-                  'white', 'green')), sg.Button('Exit')],   # a couple of buttons
+                  'white', 'green')), sg.Button('Clear plots', key='clear', button_color=('white', 'red'), disabled=True),
+               sg.Button('Exit'),],
               [sg.Text('Select Planner:'),
-               sg.Drop(values=['RRT', 'RRT*', 'RRT* Dubins', 'Voronoi'], key='dropdown', enable_events=True),
-               sg.Button('Launch Planner', key='planner', button_color=('white', 'green'), disabled=True)]]    # a couple of buttons
+               sg.Drop(values=['RRT', 'RRT*', 'RRT* Dubins', 'Voronoi'],
+                       key='dropdown', enable_events=True, default_value='RRT* Dubins'),
+               sg.Button('Launch Planner', key='planner', button_color=('white', 'green'), disabled=False)]]    # a couple of buttons
     window = sg.Window('Planning algorithm test', layout, font='Helvetica 18')
 
     env_running = False
-    already_showed = False
+    waiting_result = False
+    is_planning = False
+    fig_canvas_agg = None
     try:
-        while True:             # Event Loop
-            event, values = window.Read()
+        while True:
 
-            # if env_running:
-            #     output = ''
-            #     print('Reading output')
-            #     i = 0
-            #     for line in p.stdout.readlines():
-            #         line = line.decode(errors='replace' if (sys.version_info) < (3, 5) else 'backslashreplace').rstrip()
-            #         output += line
-            #         # debug(line)
-            #         # debug(i)
-            #         sg.Print(line, do_not_reroute_stdout=False)
-            #         # sys.stdout.flush()
-            #         i += 1
-            #         if i>2:
-            #             break
-            # for stdout_line in iter(popen.stdout.readline, ""):
-            #     yield stdout_line
-            # popen.stdout.close()
+            if waiting_result:
+                while (not os.path.exists(share_dir('planner') + '/data/dubins_path.txt')):
+                    pass
+                fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
+                waiting_result = False
+                window['clear'].update(disabled=False)
+                window.Refresh()
+
+            event, values = window.Read()
+            # Show planning results if available
 
             if event in (None, 'Exit'):         # checks if user wants to exit
                 if (env_running):
                     os.killpg(os.getpgid(p0.pid), signal.SIGTERM)
-                    os.killpg(os.getpgid(p1.pid), signal.SIGTERM)
                     kill_gazebo()
+                if 'p2' in locals():
+                    os.killpg(os.getpgid(p2.pid), signal.SIGTERM)
                 print('Exiting')
                 break
-            
+            # Planners selection:
+            if event == 'clear':
+                # clear canvas
+                if fig_canvas_agg is not None:
+                    delete_fig_agg(fig_canvas_agg)
+                    window['clear'].update(disabled=True)
+                
             if event == 'dropdown':
                 print("Planner selected: " + str(values['dropdown']))
                 window['planner'].update(disabled=False)
@@ -101,8 +111,9 @@ def main():
                 else:
                     CMD_PLANNER = "ros2 launch planner voronoi.launch.py"
                 continue
-
+            # Simulation button
             if event == 'sim':
+                # Launch simulation
                 if not env_running:
                     if not DEBUG_GRAPHICS:
                         p0 = subprocess.Popen(
@@ -112,6 +123,7 @@ def main():
                     env_running = True
                     print('Simulation launched')
                     continue
+                # Kill simulation
                 else:
                     window['sim'].update('Launch Gazebo Simulation')
                     window['sim'].update(button_color=('white', 'green'))
@@ -121,10 +133,14 @@ def main():
                     env_running = False
                     print('Simulation killed')
                     continue
-
+            # Planner button
             if event == 'planner':
-                if not already_showed:
+                if not is_planning:
+                    # Launch planner
                     print('Launching planner')
+                    if os.path.exists(share_dir('planner') + '/data/dubins_path.txt'):
+                        os.remove(share_dir('planner') +
+                                  '/data/dubins_path.txt')
                     window['planner'].update('Kill planner')
                     window['planner'].update(button_color=('white', 'red'))
                     if not DEBUG_GRAPHICS:
@@ -132,22 +148,18 @@ def main():
                             CMD_PLANNER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 
                     print('Planner launched')
-                    # fig = matplotlib.figure.Figure(figsize=(5, 4), dpi=100)
-                    # t = np.arange(0, 3, .01)
-                    # fig.add_subplot(111).plot(t, 2 * np.sin(2 * np.pi * t))
-                    time.sleep(10)
-                    fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
-                    already_showed = True
+                    waiting_result = True
+                    is_planning = True
 
-                    # window.Refresh() if window else None        # yes, a 1-line if, so shoot me
                 else:
+                    # Kill planner
                     window['planner'].update('Launch Planner')
                     window['planner'].update(button_color=('white', 'green'))
                     if not DEBUG_GRAPHICS:
                         os.killpg(os.getpgid(p1.pid), signal.SIGTERM)
-                    already_showed = False
                     print('Planner killed')
-                    already_showed = False
+                    waiting_result = False
+                    is_planning = False
                     continue
 
         window.Close()
@@ -157,6 +169,10 @@ def main():
     # if env_running:
     #     p.kill()
     #     os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+    if 'p1' in locals():
+        os.killpg(os.getpgid(p1.pid), signal.SIGTERM)
+    if 'p2' in locals():
+        os.killpg(os.getpgid(p2.pid), signal.SIGTERM)
     kill_gazebo()
 
 
