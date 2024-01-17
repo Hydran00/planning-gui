@@ -4,7 +4,12 @@ import matplotlib
 import numpy as np
 from ament_index_python.packages import get_package_share_directory
 from shapely import wkt
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 import time
+import PySimpleGUI as sg
+debug = sg.Print
+
 
 def update_figure(current_ax, current_fig):
     time.sleep(0.5)
@@ -23,11 +28,20 @@ def plot_map_and_path():
     map_path = str(get_package_share_directory('planner')) + '/data/map.txt'
     geom = wkt.loads(open(map_path, 'r').read())
     xs, ys = geom.exterior.xy
-    ax.plot(xs, ys, '-ok', lw=4)
+    xs = np.array(xs)
+    ys = np.array(ys)
+    verts = np.array([xs, ys]).T
+    polygon = Polygon(verts,closed=True, color='grey', edgecolor='k')
+    ax.add_patch(polygon)
     for hole in geom.interiors:
         # plot holes for each polygon
         xh, yh = hole.xy
-        ax.plot(xh, yh, '-ok', lw=4)
+        xh = np.array(xh)
+        yh = np.array(yh)
+        verts = np.array([xh, yh]).T
+        polygon = Polygon(verts,closed=True, color='k')
+        ax.add_patch(polygon)
+        # ax.plot(xh, yh, '-k', lw=4)
 
     ax.scatter(start[0], start[1], marker='o', color='green')
     ax.scatter(end[0], end[1], marker='o', color='red')
@@ -37,4 +51,5 @@ def plot_map_and_path():
 
 
 if __name__ == "__main__":
+    
     plot_map_and_path()
