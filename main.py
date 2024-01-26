@@ -42,13 +42,13 @@ def delete_fig_agg(fig_agg):
 def kill_gazebo():
     for proc in psutil.process_iter():
         # check whether the process name matches
-        if proc.name() == "gzserver":
-            print('Killing gzserver')
-            proc.kill()
-        if proc.name() == "gzclient":
-            print('Killing gzclient')
-            proc.kill()
-
+        # if proc.name() == "gzserver":
+        #     print('Killing gzserver')
+        #     proc.kill()
+        # if proc.name() == "gzclient":
+        #     print('Killing gzclient')
+        #     proc.kill()
+        pass
 
 def main():
     CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
@@ -79,7 +79,7 @@ def main():
                sg.Drop(values=['RRT', 'RRT*', 'RRT* Dubins', 'Voronoi'],
                        key='dropdown', enable_events=True),
                sg.Button('Launch Planner', key='planner', button_color=('white', 'green'), disabled=True)]]    # a couple of buttons
-    window = sg.Window('Planning algorithm test', layout, font='Helvetica 18')
+    window = sg.Window('Planning algorithm test', layout, font='Helvetica 18',icon="ico.png")
 
     env_running = False
     waiting_result = False
@@ -130,7 +130,7 @@ def main():
                 elif values['dropdown'] == 'RRT*':
                     CMD_PLANNER = "ros2 launch planner rrt_star.launch.py"
                 elif values['dropdown'] == 'RRT* Dubins':
-                    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py > tmp"
+                    CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
                 else:
                     CMD_PLANNER = "ros2 launch planner voronoi.launch.py"
                 continue
