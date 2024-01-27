@@ -91,14 +91,14 @@ def main():
 
             if waiting_result:
                 if first_map_plot:
-                    while (not os.path.exists(share_dir('planner') + '/data/dubins_path.txt')):
+                    while (not os.path.exists(share_dir('planner') + '/data/final_path.txt')):
                         pass
                     current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
                     waiting_result = False
                     window['clear'].update(disabled=False)
                     first_map_plot = False
                 else:
-                    while (not os.path.exists(share_dir('planner') + '/data/dubins_path.txt')):
+                    while (not os.path.exists(share_dir('planner') + '/data/final_path.txt')):
                         pass
                     current_ax,current_fig = update_figure(current_ax, current_fig)
                     waiting_result = False
@@ -166,9 +166,9 @@ def main():
                 if not is_planning:
                     # Launch planner
                     print('Launching planner')
-                    if os.path.exists(share_dir('planner') + '/data/dubins_path.txt'):
+                    if os.path.exists(share_dir('planner') + '/data/final_path.txt'):
                         os.remove(share_dir('planner') +
-                                  '/data/dubins_path.txt')
+                                  '/data/final_path.txt')
                     window['planner'].update('Kill planner')
                     window['planner'].update(button_color=('white', 'red'))
                     if not DEBUG_GRAPHICS:
