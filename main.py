@@ -70,7 +70,7 @@ def main():
        
     layout = [[sg.Text('Select the planner and click "Launch Planner". \n' +
                        'Your ros workspace must be sourced in this terminal!', key='title')],
-              [sg.Canvas(key='-CANVAS-', size=(500, 400)),
+              [sg.Canvas(key='-CANVAS-', size=(1000, 800)),
                sg.Output(size=(15, 10))],          # an output area where all print output will go
               [sg.Button('Launch Gazebo Simulation', key='sim', button_color=(
                   'white', 'green')), sg.Button('Clear plots', key='clear', button_color=('white', 'red'), disabled=True),
