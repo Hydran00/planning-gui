@@ -40,14 +40,14 @@ def delete_fig_agg(fig_agg):
     plt.close('all')
     
 def kill_gazebo():
-    for proc in psutil.process_iter():
-        # check whether the process name matches
-        # if proc.name() == "gzserver":
-        #     print('Killing gzserver')
-        #     proc.kill()
-        # if proc.name() == "gzclient":
-        #     print('Killing gzclient')
-        #     proc.kill()
+    # for proc in psutil.process_iter():
+    #     # check whether the process name matches
+    #     if proc.name() == "gzserver":
+    #         print('Killing gzserver')
+    #         proc.kill()
+    #     if proc.name() == "gzclient":
+    #         print('Killing gzclient')
+    #         proc.kill()
         pass
 
 def main():
@@ -91,17 +91,15 @@ def main():
 
             if waiting_result:
                 if first_map_plot:
-                    while (not os.path.exists(share_dir('planner') + '/data/final_path.txt')):
-                        pass
-                    current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
-                    waiting_result = False
-                    window['clear'].update(disabled=False)
-                    first_map_plot = False
+                    if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
+                        current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
+                        waiting_result = False
+                        window['clear'].update(disabled=False)
+                        first_map_plot = False
                 else:
-                    while (not os.path.exists(share_dir('planner') + '/data/final_path.txt')):
-                        pass
-                    current_ax,current_fig = update_figure(current_ax, current_fig)
-                    waiting_result = False
+                    if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
+                        current_ax,current_fig = update_figure(current_ax, current_fig)
+                        waiting_result = False
                     
             event, values = window.Read()
             # Show planning results if available
@@ -163,7 +161,7 @@ def main():
                     continue
             # Planner button
             if event == 'planner':
-                if not is_planning:
+                if not waiting_result:
                     # Launch planner
                     print('Launching planner')
                     if os.path.exists(share_dir('planner') + '/data/final_path.txt'):
@@ -177,7 +175,7 @@ def main():
 
                     print('Planner launched')
                     waiting_result = True
-                    is_planning = True
+                    # is_planning = True
 
                 else:
                     # Kill planner
@@ -187,8 +185,7 @@ def main():
                         kill_process(p1)
                     print('Planner killed')
                     waiting_result = False
-                    is_planning = False
-                    continue
+                    # is_planning = False
 
         window.Close()
     except Exception as e:
