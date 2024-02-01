@@ -92,14 +92,21 @@ def main():
             if waiting_result:
                 if first_map_plot:
                     if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
+                        debug('existing')
                         current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
                         waiting_result = False
                         window['clear'].update(disabled=False)
                         first_map_plot = False
+                    else:
+                        debug('not existing')
+                        continue
+                        
                 else:
                     if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
                         current_ax,current_fig = update_figure(current_ax, current_fig)
                         waiting_result = False
+                    else:
+                        continue
                     
             event, values = window.Read()
             # Show planning results if available
