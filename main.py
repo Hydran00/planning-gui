@@ -19,7 +19,7 @@ matplotlib.use('TkAgg')
 
 
 DEBUG_GRAPHICS = False  # wether to activate buttons effect or not
-CMD_SIMULATION = "ros2 launch projects victims.launch.py"
+CMD_SIMULATION = "ros2 launch projects victims.launch.py use_gui:=false"
 
 # sg.Print('Re-routing the stdout', do_not_reroute_stdout=False)
 debug = sg.Print
