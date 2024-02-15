@@ -70,8 +70,8 @@ def main():
        
     layout = [[sg.Text('Select the planner and click "Launch Planner". \n' +
                        'Your ros workspace must be sourced in this terminal!', key='title')],
-              [sg.Canvas(key='-CANVAS-', size=(1000, 800)),
-               sg.Output(size=(15, 10))],          # an output area where all print output will go
+            #   [sg.Canvas(key='-CANVAS-', size=(1000, 800)),
+            #    sg.Output(size=(15, 10))],          # an output area where all print output will go
               [sg.Button('Launch Gazebo Simulation', key='sim', button_color=(
                   'white', 'green')), sg.Button('Clear plots', key='clear', button_color=('white', 'red'), disabled=True),
                sg.Button('Exit'),],
@@ -89,24 +89,24 @@ def main():
     try:
         while True:
 
-            if waiting_result:
-                if first_map_plot:
-                    if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
-                        debug('existing')
-                        current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
-                        waiting_result = False
-                        window['clear'].update(disabled=False)
-                        first_map_plot = False
-                    else:
-                        debug('not existing')
-                        continue
+            # if waiting_result:
+            #     if first_map_plot:
+            #         if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
+            #             debug('existing')
+            #             current_ax, current_fig, fig_canvas_agg = draw_figure(window['-CANVAS-'].TKCanvas)
+            #             waiting_result = False
+            #             window['clear'].update(disabled=False)
+            #             first_map_plot = False
+            #         else:
+            #             debug('not existing')
+            #             continue
                         
-                else:
-                    if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
-                        current_ax,current_fig = update_figure(current_ax, current_fig)
-                        waiting_result = False
-                    else:
-                        continue
+            #     else:
+            #         if(os.path.exists(share_dir('planner') + '/data/final_path.txt')):
+            #             current_ax,current_fig = update_figure(current_ax, current_fig)
+            #             waiting_result = False
+            #         else:
+            #             continue
                     
             event, values = window.Read()
             # Show planning results if available
@@ -137,7 +137,7 @@ def main():
                 elif values['dropdown'] == 'RRT* Dubins':
                     CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
                 else:
-                    CMD_PLANNER = "ros2 launch planner voronoi.launch.py"
+                    CMD_PLANNER = "ros2 launch planner voronoi_planner.launch.py"
                 continue
             # Simulation button
             if event == 'sim':
@@ -160,10 +160,10 @@ def main():
                         kill_process(p0)
                     env_running = False
                     # clear canvas
-                    if fig_canvas_agg is not None:
-                        delete_fig_agg(fig_canvas_agg)
-                        window['clear'].update(disabled=True)
-                        first_map_plot = True
+                    # if fig_canvas_agg is not None:
+                    #     delete_fig_agg(fig_canvas_agg)
+                    #     window['clear'].update(disabled=True)
+                    #     first_map_plot = True
                     print('Simulation killed')
                     continue
             # Planner button
