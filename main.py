@@ -76,7 +76,7 @@ def main():
                   'white', 'green')), sg.Button('Clear plots', key='clear', button_color=('white', 'red'), disabled=True),
                sg.Button('Exit'),],
               [sg.Text('Select Planner:'),
-               sg.Drop(values=['RRT', 'RRT*', 'RRT* Dubins', 'Voronoi'],
+               sg.Drop(values=['Voronoi','RRT', 'RRT*', 'RRT* Dubins','Multithread RRT* Dubins'],
                        key='dropdown', enable_events=True),
                sg.Button('Launch Planner', key='planner', button_color=('white', 'green'), disabled=True)]]    # a couple of buttons
     window = sg.Window('Planning algorithm test', layout, font='Helvetica 18',icon="ico.png")
@@ -128,7 +128,7 @@ def main():
                     first_map_plot = True
                 
             if event == 'dropdown':
-                print("Planner selected: " + str(values['dropdown']))
+                # print("Planner selected: " + str(values['dropdown']))
                 window['planner'].update(disabled=False)
                 if values['dropdown'] == 'RRT':
                     CMD_PLANNER = "ros2 launch planner rrt.launch.py"
@@ -136,6 +136,8 @@ def main():
                     CMD_PLANNER = "ros2 launch planner rrt_star.launch.py"
                 elif values['dropdown'] == 'RRT* Dubins':
                     CMD_PLANNER = "ros2 launch planner rrt_star_dubins.launch.py"
+                elif values['dropdown'] == 'Multithread RRT* Dubins':
+                    CMD_PLANNER = "ros2 launch planner multithread_planner.launch.py"
                 else:
                     CMD_PLANNER = "ros2 launch planner voronoi_planner.launch.py"
                 continue
@@ -149,7 +151,7 @@ def main():
                     window['sim'].update('    Kill simulation           ')
                     window['sim'].update(button_color=('white', 'red'))
                     env_running = True
-                    print('Simulation launched')
+                    # print('Simulation launched')
                     continue
                 # Kill simulation
                 else:
@@ -164,13 +166,13 @@ def main():
                     #     delete_fig_agg(fig_canvas_agg)
                     #     window['clear'].update(disabled=True)
                     #     first_map_plot = True
-                    print('Simulation killed')
+                    # print('Simulation killed')
                     continue
             # Planner button
             if event == 'planner':
                 if not waiting_result:
                     # Launch planner
-                    print('Launching planner')
+                    # print('Launching planner')
                     if os.path.exists(share_dir('planner') + '/data/final_path.txt'):
                         os.remove(share_dir('planner') +
                                   '/data/final_path.txt')
@@ -180,7 +182,7 @@ def main():
                         p1 = subprocess.Popen(
                             CMD_PLANNER, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=os.setsid)
 
-                    print('Planner launched')
+                    # print('Planner launched')
                     waiting_result = True
                     # is_planning = True
 
@@ -190,7 +192,7 @@ def main():
                     window['planner'].update(button_color=('white', 'green'))
                     if not DEBUG_GRAPHICS:
                         kill_process(p1)
-                    print('Planner killed')
+                    # print('Planner killed')
                     waiting_result = False
                     # is_planning = False
 
